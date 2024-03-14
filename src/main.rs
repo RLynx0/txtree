@@ -10,6 +10,10 @@ use crate::opt::Opt;
 
 mod opt;
 
+macro_rules! print_debug {
+    ($c: expr, $p: ident) => {};
+}
+
 fn main() {
     let opt = Opt::parse();
 
@@ -21,7 +25,7 @@ fn main() {
             .build(),
         opt.lines,
         opt.gaps,
-        opt.extend,
+        opt.chain,
         opt.vertical,
         opt.invert,
         AlignmentBuilder::new()
@@ -31,7 +35,7 @@ fn main() {
     );
     if opt.debug {
         eprintln!("{:#?}", render_mode);
-        eprintln!("Demo Grid {{\n{}\n}}\n", render_mode.demo_grid());
+        eprintln!("Demo Grid {{\n{}\n}}", render_mode.demo_grid());
     }
 
     let parse_mode = ParseMode::new(opt.delimiter, opt.brackets);

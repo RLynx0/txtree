@@ -28,9 +28,9 @@ pub(crate) struct Opt {
     #[arg(short, long, default_value_t = 0)]
     pub(crate) gaps: u8,
 
-    /// Take an extra step before branching
+    /// Use horizontal branches
     #[arg(short, long)]
-    pub(crate) extend: bool,
+    pub(crate) chain: bool,
 
     /// Grow tree vertically
     #[arg(short, long)]
