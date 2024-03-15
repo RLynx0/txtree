@@ -109,7 +109,7 @@ const PRE_EMPT: &str = "  ";
 
 impl Node {
     pub fn mock_display(&self) -> String {
-        self.display_branch(0, 0, "")
+        self.display_root("")
     }
 
     fn display_root(&self, preprint: &str) -> String {

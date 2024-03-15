@@ -1,7 +1,7 @@
 use clap::Parser;
 use txtree::{parser::Brackets, render::Symbols};
 
-/// Utility to generate a text-based tree graph
+/// Utility to generate text-based tree graphs
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 pub(crate) struct Opt {
@@ -9,11 +9,16 @@ pub(crate) struct Opt {
     pub(crate) input: Vec<String>,
 
     /// Character used to separate elements
-    #[arg(short, long, default_value_t = ',')]
-    pub(crate) delimiter: char,
+    #[arg(short, long, default_value = ",")]
+    pub(crate) delimiter: String,
 
-    /// Characters used to enclose child elements
-    #[arg(short, long, default_value = "[]")]
+    /// Strings used to enclose child elements
+    ///
+    /// Requires a string of at least 2 characters.
+    /// If more are provided, the input is split evenly.
+    ///
+    /// Try --debug if the parser isn't behaving as intended!
+    #[arg(short, long, default_value = "[]", verbatim_doc_comment)]
     pub(crate) brackets: Brackets,
 
     /// Trim whitespace from element names
@@ -64,16 +69,26 @@ pub(crate) struct Opt {
 
     /// Use custom symbol set
     ///
-    /// Provide a symbol set to use instead
-    /// of "│─┼├┤┬┴┌┐└┘╴╶".
+    /// Provide a symbol set to use instead of "│─┼├┤┬┴┌┐└┘╴╶".
     ///
-    /// Requires a string of at least
-    /// 11 characters.
+    /// Requires a string of at least 11 characters.
+    /// These are used for:
+    ///   1. Vertical lines
+    ///   2. Horizontal lines
+    ///   3. Crossings
+    ///   4. Vertical line with branch right
+    ///   5. Vertical line with branch left
+    ///   6. Horizontal line with branch down
+    ///   7. Horizontal line with branch up
+    ///   8. Corner connecting down and right
+    ///   9. Corner connecting down and left
+    ///   10. Corner connecting up and right
+    ///   11. Corner connecting up and left
     ///
-    /// Remaining characters are
-    /// split evenly for right and
-    /// left branch caps.
-    #[arg(short, long)]
+    /// Remaining characters are split evenly for right and left branch caps.
+    ///
+    /// Try --debug if the renderer isn't bahaving as intended!
+    #[arg(short, long, verbatim_doc_comment)]
     pub(crate) symbols: Option<Symbols>,
 
     /// Sort child elements alphabetically

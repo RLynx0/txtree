@@ -89,9 +89,5 @@ fn render_string(
     parsed.order_children(order_mode);
     print_debug!(debug, parsed);
 
-    Ok(parsed
-        .take_children()
-        .into_iter()
-        .map(|n| format!("{}\n\n", n.mock_display()))
-        .collect())
+    Ok(parsed.mock_display())
 }
