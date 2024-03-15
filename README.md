@@ -90,26 +90,25 @@ o╶┤
 
 With `-ic`
 ```txtree
-      o
-    o╶┤
-  o╶┤ │
-  o╶┘ │
-o╶┘   │
-    o╶┘
+    o╶┬╴o╶┬╴o
+o╶─╴o╶┘   │   
+        o╶┘
 ```
 
 With `-fic`
 ```txtree
-  o╶┐  
-o╶┐ │  
-  o╶┤  
     o╶┐
-    o╶┤
-      o
+o╶─╴o╶┴╴o╶┐  
+        o╶┴╴o
 ```
 
 With `-mic`
 ```txtree
+o╴┌      
+  ┌╴o╶┤
+  │   └╴o╶─╴o
+o╶┤
+  └╴o
   o╶┐
     o╶┐  
   o╶┘ │

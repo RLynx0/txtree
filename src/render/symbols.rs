@@ -1,11 +1,11 @@
+use std::char;
+
 use clap::builder::{ValueParser, ValueParserFactory};
 
 #[derive(Debug, Clone)]
 pub struct Symbols {
     pub(super) vertical: char,
     pub(super) horizontal: char,
-    pub(super) cap_right: char,
-    pub(super) cap_left: char,
     pub(super) crossing: char,
     pub(super) branch_right: char,
     pub(super) branch_left: char,
@@ -15,65 +15,63 @@ pub struct Symbols {
     pub(super) corner_down_left: char,
     pub(super) corner_up_right: char,
     pub(super) corner_up_left: char,
+    pub(super) cap_right: String,
+    pub(super) cap_left: String,
 }
 impl Symbols {
     pub fn rounded() -> Self {
-        Self::ROUNDED
+        Symbols {
+            vertical: '│',
+            horizontal: '─',
+            crossing: '┼',
+            branch_right: '├',
+            branch_left: '┤',
+            branch_down: '┬',
+            branch_up: '┴',
+            corner_down_right: '╭',
+            corner_down_left: '╮',
+            corner_up_right: '╰',
+            corner_up_left: '╯',
+            cap_right: String::from("╴"),
+            cap_left: String::from("╶"),
+        }
     }
     pub fn ascii() -> Self {
-        Self::ASCII
+        Symbols {
+            vertical: '|',
+            horizontal: '-',
+            crossing: '+',
+            branch_right: '+',
+            branch_left: '+',
+            branch_down: '+',
+            branch_up: '+',
+            corner_down_right: '+',
+            corner_down_left: '+',
+            corner_up_right: '+',
+            corner_up_left: '+',
+            cap_right: String::from("- "),
+            cap_left: String::from(" -"),
+        }
     }
-
-    pub(crate) const DEFAULT: Self = Symbols {
-        vertical: '│',
-        horizontal: '─',
-        cap_right: '╴',
-        cap_left: '╶',
-        crossing: '┼',
-        branch_right: '├',
-        branch_left: '┤',
-        branch_down: '┬',
-        branch_up: '┴',
-        corner_down_right: '┌',
-        corner_down_left: '┐',
-        corner_up_right: '└',
-        corner_up_left: '┘',
-    };
-    pub(crate) const ROUNDED: Self = Symbols {
-        vertical: '│',
-        horizontal: '─',
-        cap_right: '╴',
-        cap_left: '╶',
-        crossing: '┼',
-        branch_right: '├',
-        branch_left: '┤',
-        branch_down: '┬',
-        branch_up: '┴',
-        corner_down_right: '╭',
-        corner_down_left: '╮',
-        corner_up_right: '╰',
-        corner_up_left: '╯',
-    };
-    pub(crate) const ASCII: Self = Symbols {
-        vertical: '|',
-        horizontal: '-',
-        cap_right: ' ',
-        cap_left: ' ',
-        crossing: '+',
-        branch_right: '+',
-        branch_left: '+',
-        branch_down: '+',
-        branch_up: '+',
-        corner_down_right: '+',
-        corner_down_left: '+',
-        corner_up_right: '+',
-        corner_up_left: '+',
-    };
 }
 
 impl Default for Symbols {
     fn default() -> Self {
-        Self::DEFAULT
+        Symbols {
+            vertical: '│',
+            horizontal: '─',
+            crossing: '┼',
+            branch_right: '├',
+            branch_left: '┤',
+            branch_down: '┬',
+            branch_up: '┴',
+            corner_down_right: '┌',
+            corner_down_left: '┐',
+            corner_up_right: '└',
+            corner_up_left: '┘',
+            cap_right: String::from("╴"),
+            cap_left: String::from("╶"),
+        }
     }
 }
 
@@ -88,27 +86,38 @@ impl ValueParserFactory for Symbols {
                     chars.next().ok_or("Not enough characters in string")?
                 };
             }
+            let vertical = next!();
+            let horizontal = next!();
+            let crossing = next!();
+            let branch_right = next!();
+            let branch_left = next!();
+            let branch_down = next!();
+            let branch_up = next!();
+            let corner_down_right = next!();
+            let corner_down_left = next!();
+            let corner_up_right = next!();
+            let corner_up_left = next!();
 
-            let symbols = Symbols {
-                vertical: next!(),
-                horizontal: next!(),
-                cap_right: next!(),
-                cap_left: next!(),
-                crossing: next!(),
-                branch_right: next!(),
-                branch_left: next!(),
-                branch_down: next!(),
-                branch_up: next!(),
-                corner_down_right: next!(),
-                corner_down_left: next!(),
-                corner_up_right: next!(),
-                corner_up_left: next!(),
-            };
+            let remaining = chars.collect::<Vec<_>>();
+            let halflen = remaining.len() / 2;
+            let cap_right = remaining[..halflen].iter().collect();
+            let cap_left = remaining[halflen..].iter().collect();
 
-            match chars.next() {
-                None => Ok(symbols),
-                Some(_) => Err("Too many characters in string"),
-            }
+            Ok(Symbols {
+                vertical,
+                horizontal,
+                crossing,
+                branch_right,
+                branch_left,
+                branch_down,
+                branch_up,
+                corner_down_right,
+                corner_down_left,
+                corner_up_right,
+                corner_up_left,
+                cap_right,
+                cap_left,
+            })
         })
     }
 }
@@ -120,8 +129,6 @@ pub struct SymbolsBuilder {
 
     vertical: Option<char>,
     horizontal: Option<char>,
-    cap_right: Option<char>,
-    cap_left: Option<char>,
     crossing: Option<char>,
     branch_right: Option<char>,
     branch_left: Option<char>,
@@ -131,6 +138,8 @@ pub struct SymbolsBuilder {
     corner_down_left: Option<char>,
     corner_up_right: Option<char>,
     corner_up_left: Option<char>,
+    cap_right: Option<String>,
+    cap_left: Option<String>,
 }
 impl SymbolsBuilder {
     pub fn new() -> Self {
@@ -172,14 +181,6 @@ impl SymbolsBuilder {
         self.horizontal = horizontal;
         self
     }
-    pub fn cap_right(&mut self, cap_right: Option<char>) -> &mut Self {
-        self.cap_right = cap_right;
-        self
-    }
-    pub fn cap_left(&mut self, cap_left: Option<char>) -> &mut Self {
-        self.cap_left = cap_left;
-        self
-    }
     pub fn crossing(&mut self, crossing: Option<char>) -> &mut Self {
         self.crossing = crossing;
         self
@@ -216,12 +217,20 @@ impl SymbolsBuilder {
         self.corner_up_left = corner_up_left;
         self
     }
+    pub fn cap_right(&mut self, cap_right: Option<String>) -> &mut Self {
+        self.cap_right = cap_right;
+        self
+    }
+    pub fn cap_left(&mut self, cap_left: Option<String>) -> &mut Self {
+        self.cap_left = cap_left;
+        self
+    }
 
     pub fn build(&self) -> Symbols {
         macro_rules! field {
             ($field: tt) => {
-                match (self.$field, self.default_to_ascii, self.default_to_rounded) {
-                    (Some(c), _, _) => c,
+                match (&self.$field, self.default_to_ascii, self.default_to_rounded) {
+                    (Some(c), _, _) => c.to_owned(),
                     (None, true, _) => Symbols::ascii().$field,
                     (None, false, true) => Symbols::rounded().$field,
                     (None, false, false) => Symbols::default().$field,
@@ -232,8 +241,6 @@ impl SymbolsBuilder {
         Symbols {
             vertical: field!(vertical),
             horizontal: field!(horizontal),
-            cap_right: field!(cap_right),
-            cap_left: field!(cap_left),
             crossing: field!(crossing),
             branch_right: field!(branch_right),
             branch_left: field!(branch_left),
@@ -243,6 +250,8 @@ impl SymbolsBuilder {
             corner_down_left: field!(corner_down_left),
             corner_up_right: field!(corner_up_right),
             corner_up_left: field!(corner_up_left),
+            cap_right: field!(cap_right),
+            cap_left: field!(cap_left),
         }
     }
 }

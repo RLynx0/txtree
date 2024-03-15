@@ -65,7 +65,14 @@ pub(crate) struct Opt {
     /// Use custom symbol set
     ///
     /// Provide a symbol set to use instead
-    /// of "│─╴╶┼├┤┬┴┌┐└┘" (13 characters).
+    /// of "│─┼├┤┬┴┌┐└┘╴╶".
+    ///
+    /// Requires a string of at least
+    /// 11 characters.
+    ///
+    /// Remaining characters are
+    /// split evenly for right and
+    /// left branch caps.
     #[arg(short = 'S', long)]
     pub(crate) symbols: Option<Symbols>,
 

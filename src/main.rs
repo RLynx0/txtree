@@ -11,7 +11,11 @@ use crate::opt::Opt;
 mod opt;
 
 macro_rules! print_debug {
-    ($c: expr, $p: ident) => {};
+    ($c: expr, $($p: expr),*) => {
+        if $c {
+            $(eprintln!("{:#?}", $p);)*
+        }
+    };
 }
 
 fn main() {
@@ -33,15 +37,10 @@ fn main() {
             .centered(opt.middle)
             .build(),
     );
-    if opt.debug {
-        eprintln!("{:#?}", render_mode);
-        eprintln!("Demo Grid {{\n{}\n}}", render_mode.demo_grid());
-    }
+    print_debug!(opt.debug, render_mode);
 
     let parse_mode = ParseMode::new(opt.delimiter, opt.brackets);
-    if opt.debug {
-        eprintln!("{:#?}", parse_mode);
-    }
+    print_debug!(opt.debug, parse_mode);
 
     if opt.input.is_empty() {
         let stdin = io::stdin();
@@ -69,9 +68,7 @@ fn parse_and_render(input: &str, parse_mode: ParseMode, debug: bool) -> Result<S
         Ok((s, _)) => return Err(format!("Failed to parse input, on {:?}.", s)),
         Err(e) => return Err(format!("Failed to parse input. {:?}", e)),
     };
-    if debug {
-        eprintln!("Parsed Nodes {:#?}", parsed);
-    }
+    print_debug!(debug, parsed);
 
     Ok(String::new())
 }
