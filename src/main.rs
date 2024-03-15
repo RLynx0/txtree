@@ -4,7 +4,7 @@ use std::{
 };
 
 use clap::Parser;
-use txtree::{parser::parse_nodes, prelude::*};
+use txtree::{prelude::*, OrderMode};
 
 use crate::opt::Opt;
 
@@ -21,6 +21,12 @@ macro_rules! print_debug {
 fn main() {
     let opt = Opt::parse();
 
+    let parse_mode = ParseMode::new(opt.delimiter, opt.brackets);
+    let order_mode = OrderModeBuilder::new()
+        .opt_sort_program(opt.sort_by)
+        .default_to_alphabetical(opt.sort)
+        .reverse(opt.reverse)
+        .build();
     let render_mode = RenderMode::new(
         SymbolsBuilder::new()
             .opt_symbol_set(opt.symbols)
@@ -37,22 +43,22 @@ fn main() {
             .centered(opt.middle)
             .build(),
     );
-    print_debug!(opt.debug, render_mode);
 
-    let parse_mode = ParseMode::new(opt.delimiter, opt.brackets);
     print_debug!(opt.debug, parse_mode);
+    print_debug!(opt.debug, order_mode);
+    print_debug!(opt.debug, render_mode);
 
     if opt.input.is_empty() {
         let stdin = io::stdin();
         for line in stdin.lock().lines() {
             let line = line.expect("Failed to read from stdin");
-            match parse_and_render(&line, parse_mode.clone(), opt.debug) {
+            match render_string(&line, parse_mode.clone(), &order_mode, opt.debug) {
                 Ok(s) => println!("{}", s),
                 Err(e) => eprintln!("{}", e),
             };
         }
     } else {
-        match parse_and_render(&opt.input.join(" "), parse_mode, opt.debug) {
+        match render_string(&opt.input.join(" "), parse_mode, &order_mode, opt.debug) {
             Ok(s) => println!("{}", s),
             Err(e) => {
                 eprintln!("{}", e);
@@ -62,12 +68,23 @@ fn main() {
     }
 }
 
-fn parse_and_render(input: &str, parse_mode: ParseMode, debug: bool) -> Result<String, String> {
-    let parsed = match parse_nodes(input, parse_mode) {
-        Ok(("", p)) => p,
-        Ok((s, _)) => return Err(format!("Failed to parse input, on {:?}.", s)),
-        Err(e) => return Err(format!("Failed to parse input. {:?}", e)),
-    };
+fn render_string(
+    input: &str,
+    parse_mode: ParseMode,
+    order_mode: &OrderMode,
+    debug: bool,
+) -> Result<String, String> {
+    let mut parsed = Node::new(
+        String::from("ROOT"),
+        match parse_nodes(input, parse_mode) {
+            Ok(("", p)) => p,
+            Ok((s, _)) => return Err(format!("Failed to parse input, on {:?}.", s)),
+            Err(e) => return Err(format!("Failed to parse input. {:?}", e)),
+        },
+    );
+
+    print_debug!(debug, parsed);
+    parsed.order_children(order_mode);
     print_debug!(debug, parsed);
 
     Ok(String::new())

@@ -8,10 +8,6 @@ pub(crate) struct Opt {
     /// Strings to be turned into a graph
     pub(crate) input: Vec<String>,
 
-    /// Sort child elements alphabetically
-    #[arg(short, long)]
-    pub(crate) sort: bool,
-
     /// Character used to separate elements
     #[arg(short, long, default_value_t = ',')]
     pub(crate) delimiter: char,
@@ -73,8 +69,22 @@ pub(crate) struct Opt {
     /// Remaining characters are
     /// split evenly for right and
     /// left branch caps.
-    #[arg(short = 'S', long)]
+    #[arg(short, long)]
     pub(crate) symbols: Option<Symbols>,
+
+    /// Sort child elements alphabetically
+    ///
+    /// Does nothing when using --sort-by
+    #[arg(short = 'S', long)]
+    pub(crate) sort: bool,
+
+    /// Sort child elements with external program
+    #[arg(short = 'B', long, name = "PROGRAM")]
+    pub(crate) sort_by: Option<String>,
+
+    /// Reverse order of child elements
+    #[arg(short = 'R', long)]
+    pub(crate) reverse: bool,
 
     /// Print debug information
     #[arg(short = 'D', long)]
