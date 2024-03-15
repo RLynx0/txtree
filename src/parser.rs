@@ -40,12 +40,14 @@ impl ValueParserFactory for Brackets {
 pub struct ParseMode {
     delimiter: char,
     brackets: Brackets,
+    trim: bool,
 }
 impl ParseMode {
-    pub fn new(delimiter: char, brackets: Brackets) -> Self {
+    pub fn new(delimiter: char, brackets: Brackets, trim: bool) -> Self {
         ParseMode {
             delimiter,
             brackets,
+            trim,
         }
     }
 }
@@ -69,7 +71,7 @@ fn single_node(mode: ParseMode) -> impl Fn(&str) -> IResult<&str, Node> {
                 is_not(mode.to_string().as_str()),
                 opt(bracketed(mode.clone())),
             )),
-            map_node,
+            map_node(mode.trim),
         )(i)
     }
 }
@@ -85,6 +87,14 @@ fn bracketed(mode: ParseMode) -> impl Fn(&str) -> IResult<&str, Vec<Node>> {
 fn node_list(mode: ParseMode) -> impl Fn(&str) -> IResult<&str, Vec<Node>> {
     move |i: &str| separated_list0(char(mode.delimiter), single_node(mode.clone()))(i)
 }
-fn map_node((name, children): (&str, Option<Vec<Node>>)) -> Result<Node, Infallible> {
-    Ok(Node::new(name.to_owned(), children.unwrap_or_default()))
+fn map_node(trim: bool) -> impl Fn((&str, Option<Vec<Node>>)) -> Result<Node, Infallible> {
+    move |(name, children)| {
+        Ok(Node::new(
+            match trim {
+                true => name.trim().to_owned(),
+                false => name.to_owned(),
+            },
+            children.unwrap_or_default(),
+        ))
+    }
 }

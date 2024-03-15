@@ -21,12 +21,14 @@ macro_rules! print_debug {
 fn main() {
     let opt = Opt::parse();
 
-    let parse_mode = ParseMode::new(opt.delimiter, opt.brackets);
+    let parse_mode = ParseMode::new(opt.delimiter, opt.brackets, opt.trim);
+
     let order_mode = OrderModeBuilder::new()
         .opt_sort_program(opt.sort_by)
         .default_to_alphabetical(opt.sort)
         .reverse(opt.reverse)
         .build();
+
     let render_mode = RenderMode::new(
         SymbolsBuilder::new()
             .opt_symbol_set(opt.symbols)
@@ -87,5 +89,9 @@ fn render_string(
     parsed.order_children(order_mode);
     print_debug!(debug, parsed);
 
-    Ok(String::new())
+    Ok(parsed
+        .take_children()
+        .into_iter()
+        .map(|n| format!("{}\n\n", n.mock_display()))
+        .collect())
 }

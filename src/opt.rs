@@ -16,6 +16,10 @@ pub(crate) struct Opt {
     #[arg(short, long, default_value = "[]")]
     pub(crate) brackets: Brackets,
 
+    /// Trim whitespace from element names
+    #[arg(short, long)]
+    pub(crate) trim: bool,
+
     /// Number of lines between elements
     #[arg(short, long, default_value_t = 0)]
     pub(crate) lines: u8,

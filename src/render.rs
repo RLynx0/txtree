@@ -3,8 +3,6 @@ mod symbols;
 
 use std::fmt::Debug;
 
-use nom::AsChar;
-
 pub use self::{
     alignment::{Alignment, AlignmentBuilder},
     symbols::{Symbols, SymbolsBuilder},

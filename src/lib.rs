@@ -24,7 +24,6 @@ impl Node {
             Some(Sorter::External(prog)) => todo!("Sort using {}", prog),
             None => (),
         }
-        self.children.sort();
 
         if order_mode.reverse {
             self.children.reverse();
@@ -33,6 +32,9 @@ impl Node {
         self.children
             .iter_mut()
             .for_each(|c| c.order_children(order_mode));
+    }
+    pub fn take_children(self) -> Vec<Node> {
+        self.children
     }
 }
 impl<S, I> From<(S, I)> for Node
@@ -92,5 +94,86 @@ impl OrderModeBuilder {
                 }),
             reverse: self.reverse_order,
         }
+    }
+}
+
+enum DisplayPlace {
+    Item,
+    Last,
+}
+
+const PRE_LINE: &str = "│ ";
+const PRE_ITEM: &str = "├╴";
+const PRE_LAST: &str = "╰╴";
+const PRE_EMPT: &str = "  ";
+
+impl Node {
+    pub fn mock_display(&self) -> String {
+        self.display_branch(0, 0, "")
+    }
+
+    fn display_root(&self, preprint: &str) -> String {
+        let root_length = self.children.len();
+        self.children
+            .iter()
+            .enumerate()
+            .map(|(index, child)| {
+                child.display_branch(
+                    // FMT: -
+                    root_length,
+                    index,
+                    preprint,
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    fn display_branch(&self, root_len: usize, index: usize, preprint: &str) -> String {
+        let len = self.children.len();
+        let placement = compute_placement(root_len, index);
+        let child_preprint = compute_child_preprint(preprint, &placement);
+        let preprint = compute_preprint(preprint, &placement);
+        let name_separator = compute_name_separator(len);
+
+        format!(
+            "{}{}{}{}",
+            preprint,
+            self.name,
+            name_separator,
+            self.display_root(&child_preprint)
+        )
+    }
+}
+
+fn compute_placement(root_len: usize, index: usize) -> DisplayPlace {
+    let last_index = root_len.saturating_sub(1);
+    if index == last_index {
+        DisplayPlace::Last
+    } else {
+        DisplayPlace::Item
+    }
+}
+
+fn compute_child_preprint(preprint: &str, placement: &DisplayPlace) -> String {
+    use DisplayPlace::*;
+    match placement {
+        Item => format!("{}{}", preprint, PRE_LINE),
+        Last => format!("{}{}", preprint, PRE_EMPT),
+    }
+}
+
+fn compute_preprint(preprint: &str, placement: &DisplayPlace) -> String {
+    use DisplayPlace::*;
+    match placement {
+        Item => format!("{}{}", preprint, PRE_ITEM),
+        Last => format!("{}{}", preprint, PRE_LAST),
+    }
+}
+
+fn compute_name_separator(len: usize) -> &'static str {
+    match len {
+        0 => "",
+        _ => "\n",
     }
 }
