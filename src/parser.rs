@@ -2,11 +2,12 @@ use std::convert::Infallible;
 
 use clap::builder::{ValueParser, ValueParserFactory};
 use nom::{
-    bytes::complete::{is_not, tag},
+    bytes::complete::{tag, take_while},
     combinator::{map_res, opt},
+    error::ErrorKind,
     multi::separated_list0,
     sequence::{delimited, tuple},
-    IResult,
+    FindSubstring, IResult,
 };
 
 use crate::Node;
@@ -27,8 +28,16 @@ impl ValueParserFactory for Brackets {
                 return Err("Not enough chars in string");
             }
 
-            let open = chars[..halflen].iter().collect();
-            let close = chars[halflen..].iter().collect();
+            let open = chars[..halflen]
+                .iter()
+                .collect::<String>()
+                .trim()
+                .to_owned();
+            let close = chars[halflen..]
+                .iter()
+                .collect::<String>()
+                .trim()
+                .to_owned();
 
             Ok(Brackets { open, close })
         })
@@ -66,30 +75,68 @@ pub fn parse_nodes(input: &str, mode: ParseMode) -> IResult<&str, Vec<Node>> {
 fn single_node(mode: ParseMode) -> impl Fn(&str) -> IResult<&str, Node> {
     move |i: &str| {
         map_res(
-            tuple((
-                is_not(mode.to_string().as_str()),
-                opt(bracketed(mode.clone())),
-            )),
-            map_node(mode.trim),
+            tuple((node_name(mode.clone()), opt(bracketed(mode.clone())))),
+            map_node(mode.clone()),
         )(i)
     }
 }
+
+pub fn node_name(mode: ParseMode) -> impl Fn(&str) -> IResult<&str, &str> {
+    move |i: &str| {
+        let max = i.len();
+        let index = [
+            i.find_substring(&mode.delimiter).unwrap_or(max),
+            i.find_substring(&mode.brackets.open).unwrap_or(max),
+            i.find_substring(&mode.brackets.close).unwrap_or(max),
+        ]
+        .into_iter()
+        .min()
+        .unwrap();
+
+        if index > 0 {
+            Ok((&i[index..], &i[..index]))
+        } else {
+            Err(nom::Err::Error(nom::error::Error {
+                input: i,
+                code: ErrorKind::Fail,
+            }))
+        }
+    }
+}
+
 fn bracketed(mode: ParseMode) -> impl Fn(&str) -> IResult<&str, Vec<Node>> {
     move |i: &str| {
         delimited(
-            tag(mode.brackets.open.as_str()),
+            wtag(mode.brackets.open.clone()),
             node_list(mode.clone()),
-            tag(mode.brackets.close.as_str()),
+            wtag(mode.brackets.close.clone()),
         )(i)
     }
 }
+
 fn node_list(mode: ParseMode) -> impl Fn(&str) -> IResult<&str, Vec<Node>> {
-    move |i: &str| separated_list0(tag(mode.delimiter.as_str()), single_node(mode.clone()))(i)
+    move |i: &str| {
+        separated_list0(
+            // FMT: -
+            wtag(mode.delimiter.clone()),
+            single_node(mode.clone()),
+        )(i)
+    }
 }
-fn map_node(trim: bool) -> impl Fn((&str, Option<Vec<Node>>)) -> Result<Node, Infallible> {
+
+fn wtag(wtag: String) -> impl Fn(&str) -> IResult<&str, (Option<&str>, &str)> {
+    move |i: &str| {
+        tuple((
+            opt(take_while(|c: char| c.is_whitespace())),
+            tag(wtag.as_str()),
+        ))(i)
+    }
+}
+
+fn map_node(mode: ParseMode) -> impl Fn((&str, Option<Vec<Node>>)) -> Result<Node, Infallible> {
     move |(name, children)| {
         Ok(Node::new(
-            match trim {
+            match mode.trim {
                 true => name.trim().to_owned(),
                 false => name.to_owned(),
             },

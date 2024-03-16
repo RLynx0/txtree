@@ -8,7 +8,7 @@ pub(crate) struct Opt {
     /// Strings to be turned into a graph
     pub(crate) input: Vec<String>,
 
-    /// Character used to separate elements
+    /// String used to separate elements
     #[arg(short, long, default_value = ",")]
     pub(crate) delimiter: String,
 
@@ -16,6 +16,12 @@ pub(crate) struct Opt {
     ///
     /// Requires a string of at least 2 characters.
     /// If more are provided, the input is split evenly.
+    ///
+    /// Surrounding whitespace is trimmed after splitting!
+    /// This allows for strings of differing length:
+    /// --brackets "BEGIN  END"
+    /// => ("BEGIN", "  END")   [split]
+    /// => ("BEGIN", "END")     [trim]
     ///
     /// Try --debug if the parser isn't behaving as intended!
     #[arg(short, long, default_value = "[]", verbatim_doc_comment)]
